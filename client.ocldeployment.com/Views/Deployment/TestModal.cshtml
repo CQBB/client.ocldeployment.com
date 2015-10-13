@@ -1,0 +1,144 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+ 
+    jQuery(document).ready(function () {
+
+        var waitingDialog = waitingDialog || (function ($) {
+            'use strict';
+
+            // Creating modal dialog's DOM
+            var $dialog = $(
+                '<div class="modal fade" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="padding-top:15%; overflow-y:visible;">' +
+                '<div class="modal-dialog modal-m">' +
+                '<div class="modal-content">' +
+                    '<div class="modal-header"><h3 style="margin:0;"></h3></div>' +
+                    '<div class="modal-body">' +
+                        '<div class="progress progress-striped active" style="margin-bottom:0;"><div class="progress-bar" style="width: 100%"></div></div>' +
+                    '</div>' +
+                '</div></div></div>');
+
+            return {
+           
+                show: function (message, options) {
+                    // Assigning defaults
+                    if (typeof options === 'undefined') {
+                        options = {};
+                    }
+                    if (typeof message === 'undefined') {
+                        message = 'Loading';
+                    }
+                    var settings = $.extend({
+                        dialogSize: 'm',
+                        progressType: '',
+                        onHide: null // This callback runs after the dialog was hidden
+                    }, options);
+
+                    // Configuring dialog
+                    $dialog.find('.modal-dialog').attr('class', 'modal-dialog').addClass('modal-' + settings.dialogSize);
+                    $dialog.find('.progress-bar').attr('class', 'progress-bar');
+                    if (settings.progressType) {
+                        $dialog.find('.progress-bar').addClass('progress-bar-' + settings.progressType);
+                    }
+                    $dialog.find('h3').text(message);
+                    // Adding callbacks
+                    if (typeof settings.onHide === 'function') {
+                        $dialog.off('hidden.bs.modal').on('hidden.bs.modal', function (e) {
+                            settings.onHide.call($dialog);
+                        });
+                    }
+                    // Opening dialog
+                    $dialog.modal();
+                },
+                /**
+                 * Closes dialog
+                 */
+                hide: function () {
+                    $dialog.modal('hide');
+                }
+            };
+
+        })(jQuery);
+
+        //load the partial view that shows the deployment result
+        function loadResult(siteId, serverId) {
+            var resultDiv = document.createElement("Div");
+            $(resultDiv).load("/Deployment/GetResult", { siteId: siteId, serverId: serverId });
+              
+            document.getElementById("div_deploymentresults").appendChild(resultDiv);
+        };
+            
+        $(".deploy").click(function () {
+           
+            //$("#div_deploymentresults").empty();
+            //var siteId = $(this).attr("data-siteId");
+            //var isLive = $(this).attr("data-isLive");              
+
+            //if (isLive == 0) {
+            //    loadResult(siteId, 4);
+            //}
+            //else
+            //{
+            //    switch (siteId)
+            //    {//deploy to web01 to web04
+            //        case "1":
+            //        case "2":
+            //        case "3":
+            //        case "4":
+            //        case "5":
+            //        case "6":
+            //        case "7":
+            //            {
+            //                $.each(["0", "1", "2", "3"], function (index, serverId) {
+            //                    loadResult(siteId, serverId);
+            //                });
+            //                break;
+            //            }
+            //        default://only deploy to web03 and web04
+            //            {
+            //                $.each(["2", "3"], function (index, serverId) {
+                                   
+            //                    loadResult(siteId, serverId);
+            //                });
+            //                break;
+            //            }
+            //    }
+            //}
+     
+        });
+
+
+    });
+
+    </script>
+  
+</head>
+<body>
+    <div>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".modal">Show dialog</button>
+  </div>
+    <div class="modal hide" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-header">
+            <h1>Processing...</h1>
+        </div>
+        <div class="modal-body">
+            <div class="progress progress-striped active">
+                <div class="bar" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

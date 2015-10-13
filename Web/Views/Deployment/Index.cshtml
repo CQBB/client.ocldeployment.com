@@ -1,0 +1,272 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+    <h2 style="text-align:center">OCL Deployment</h2>   
+<link href="~/CSS/bootstrap.css" rel="stylesheet" />
+<link href="~/CSS/deployment.css" rel="stylesheet" />
+<script src="~/Scripts/jquery.min.js"></script>
+<script src="~/Scripts/jquery.confirm.js"></script>
+<script src="~/Scripts/bootstrap.js"></script>
+
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            var siteId = "";
+            var isLive = "";
+
+            var waitingDialog = waitingDialog || (function ($) {
+                'use strict';
+
+                // Creating modal dialog's DOM
+                var $dialog = $(
+                    '<div class="modal fade" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="padding-top:15%; overflow-y:visible;">' +
+                    '<div class="modal-dialog modal-m">' +
+                    '<div class="modal-content">' +
+                        '<div class="modal-header"><h3 style="margin:0;"></h3></div>' +
+                        '<div class="modal-body">' +
+                            '<div class="progress progress-striped active" style="margin-bottom:0;"><div class="progress-bar" style="width: 100%"></div></div>' +
+                        '</div>' +
+                    '</div></div></div>');
+
+                return {
+           
+                    show: function (message, options) {
+                        // Assigning defaults
+                        if (typeof options === 'undefined') {
+                            options = {};
+                        }
+                        if (typeof message === 'undefined') {
+                            message = 'Loading';
+                        }
+                        var settings = $.extend({
+                            dialogSize: 'm',
+                            progressType: '',
+                            onHide: null // This callback runs after the dialog was hidden
+                        }, options);
+
+                        // Configuring dialog
+                        $dialog.find('.modal-dialog').attr('class', 'modal-dialog').addClass('modal-' + settings.dialogSize);
+                        $dialog.find('.progress-bar').attr('class', 'progress-bar');
+                        if (settings.progressType) {
+                            $dialog.find('.progress-bar').addClass('progress-bar-' + settings.progressType);
+                        }
+                        $dialog.find('h3').text(message);
+                        // Adding callbacks
+                        if (typeof settings.onHide === 'function') {
+                            $dialog.off('hidden.bs.modal').on('hidden.bs.modal', function (e) {
+                                settings.onHide.call($dialog);
+                            });
+                        }
+                        // Opening dialog
+                        $dialog.modal();
+                    },
+                    /**
+                     * Closes dialog
+                     */
+                    hide: function () {
+                        $dialog.modal('hide');
+                    }
+                };
+
+         })(jQuery);
+
+           
+            
+
+
+            //Popup and close loading bar
+            $(document).ajaxStart(function () {
+                waitingDialog.show("Please wait for deployment");
+            });
+            $(document).ajaxComplete(function () {
+                waitingDialog.hide();
+            });
+            //load the partial view that shows the deployment result
+            function loadResult(siteId, serverId) {
+                var resultDiv = document.createElement("Div");
+                $(resultDiv).load("/Deployment/GetResult", { siteId: siteId, serverId: serverId });
+              
+                document.getElementById("div_deploymentresults").appendChild(resultDiv);
+            };
+            
+            $(".deploy").click(function () {
+                siteId = $(this).attr("data-siteId");
+                isLive = $(this).attr("data-isLive");
+            });
+
+            $(".deploy").confirm({
+                //waitingDialog.show("Please wait for deployment");
+                text: "Are you sure you want to deploy?",
+                title: "Confirmation required",
+                confirm: function (button) {
+                    $("#div_deploymentresults").empty();
+                    
+                  
+                    
+                    if (isLive == 0) {
+                        loadResult(siteId, 4);
+                    }
+                    else {
+                        switch (siteId) {//deploy to web01 to web04
+                            case "1":
+                            case "2":
+                            case "3":
+                            case "4":
+                            case "5":
+                            case "6":
+                            case "7":
+                                {
+                                    $.each(["0", "1", "2", "3"], function (index, serverId) {
+                                        loadResult(siteId, serverId);
+                                    });
+                                    break;
+                                }
+                            default://only deploy to web03 and web04
+                                {
+                                    $.each(["2", "3"], function (index, serverId) {
+
+                                        loadResult(siteId, serverId);
+                                    });
+                                    break;
+                                }
+                        }
+                    }
+                },
+                cancel:function(button){},
+                confirmButton: "Yes",
+                cancelButton: "No",
+                post: true,
+                confirmButtonClass: "btn-primary",
+                cancelButtonClass: "btn-default",
+                dialogClass: "modal-dialog modal-m" // Bootstrap classes for large modal
+     
+            });
+
+
+        });
+
+       
+      
+    </script>
+    @using (Html.BeginForm())
+    {
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6" style="border-right:1px solid #808080">
+                    @{Html.RenderPartial("~/Views/Deployment/_PartialSiteList.cshtml");}
+
+
+
+                    @*<div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy admin.nurse.com to</span></div>
+                            <div class="col-lg-3">
+                             <input type="button" class="deploy btn btn-default" value="To Stage" data-siteId="0" data-isLive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="0" data-islive="1" />
+                            </div>
+                        </div>
+                           <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy to ce.nurse.com</span></div>
+                               <div class="col-lg-3">
+                                   <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="1" data-islive="0" />
+                               </div>
+                               <div class="col-lg-3">
+                                   <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="1" data-islive="1" />
+                               </div>  </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy ceadmin.nurse.com to</span> </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="2" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="2" data-islive="1" />
+                            </div>     </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy cedirect to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="3" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="3" data-islive="1" />
+                            </div>  </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy continuingeducation.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="4" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="4" data-islive="1" />
+                            </div>   </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy jobadmin.nurse.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="5" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="5" data-islive="1" />
+                            </div>    </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy pearlsreview.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="6" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="6" data-islive="1" />
+                            </div>   </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy symphonyimport.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="7" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+
+                            </div>   </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy www.nurse.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="8" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="8" data-islive="1" />
+                            </div></div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy www.todayinot.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="9" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="9" data-islive="1" />
+                            </div>   </div>
+                        <div class="row">
+                            <div class="col-lg-4 col-lg-offset-1"><span>Deploy www.todayinpt.com to</span></div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Stage" data-siteid="10" data-islive="0" />
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="button" class="deploy btn btn-default" value="To Live" data-siteid="10" data-islive="1" />
+                            </div>  </div>*@
+                </div>
+                <div class="col-lg-6" id="div_deploymentresults">
+
+
+
+                    @*@{
+                            var results=ViewBag.results;
+                          if( results!= null)
+                          {
+                             foreach (var line in results)
+                           {
+                               @:<span>
+                               @Html.Raw(line);
+                               @:</span>
+                           }
+                          }
+                        }*@
+
+
+                </div>
+            </div>
+        </div>
+    }
+

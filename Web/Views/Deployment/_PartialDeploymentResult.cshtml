@@ -1,0 +1,14 @@
+﻿@model client.ocldeployment.com.Models.BatExecInfo
+
+@{
+        var results=Model.BatExecResult;
+      if( results!= null)
+      {
+         foreach (var line in results)
+       {
+           @:<div class="result"><span>
+           @Html.Raw(line);
+           @:</span></div>
+       }
+      }
+    }
